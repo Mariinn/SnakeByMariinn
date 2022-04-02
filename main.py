@@ -10,11 +10,18 @@ screen = pygame.display.set_mode((800, 600))
 clock = pygame.time.Clock()
 font = pygame.font.SysFont(None, 40)
 
+pygame.mixer.init()
+
+game_sound = pygame.mixer.Sound("gamesound.wav")
+game_sound.set_volume(0.6)
+point_sound = pygame.mixer.Sound("point.wav")
+point_sound.set_volume(0.4)
+
 
 # r =  Rect( left, top, width, hight )
 #head = Rect(400, 300, 30, 30)
 game_points = 0
-speed = 10
+speed = 30
 direction = [speed, 0]
 color = (255, 255, 255)
 
@@ -40,7 +47,7 @@ def random_color():
 def move(head, snake):
     global direction, color
 
-    if keys[K_w] and direction[1] == 0 :
+    if keys[K_w] and direction[1] == 0:
         direction = [0, -speed]
     elif keys[K_s] and direction[1] == 0:
         direction = [0, speed]
@@ -78,13 +85,14 @@ def pickup():
         game_points += 10
         print(f'game_points: {game_points}')
         snake.append(snake[-1].copy())
-
+        point_sound.play()
     if head_rect.colliderect(heart_rect):
         heart_rect.x = randint(40, 760)
         heart_rect.y = randint(40, 560)
         game_points += 10
         print(f'game_points: {game_points}')
         snake.append(snake[-1].copy())
+        point_sound.play()
 
 def score():
     global game_points
@@ -92,6 +100,12 @@ def score():
     text_rect = text.get_rect(center=(400, 500))
     screen.blit(text, text_rect)
 
+def gameover():
+    global snake, head_rect
+    for segment in snake[1:]:
+        if head_rect.colliderect(segment):
+            return True
+    return False
 head_image, head_rect = load_image('head.png', 400, 300)
 apple_image, apple_rect = load_image('apple.png', 200, 300)
 heart_image, heart_rect = load_image('heart.png', 200, 300)
@@ -99,6 +113,7 @@ body_image, body_rect = load_image('body.png', 400, 300)
 
 snake = [head_rect, body_rect]
 
+game_sound.play()
 while True:
     for event in pygame.event.get():
         if event.type == QUIT:
@@ -122,5 +137,8 @@ while True:
     pickup()
     score()
 
+    if gameover():
+        pygame.quit()
+        exit()
     pygame.display.update()
-    clock.tick(30)
+    clock.tick(20)
